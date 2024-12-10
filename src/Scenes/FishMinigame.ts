@@ -1,23 +1,21 @@
-import Bubble from '../CanvasItems/Bubble.js';
-import FishnetPlayer from '../CanvasItems/FishnetPlayer.js';
-import GameItem from '../CanvasItems/GameItem.js';
-import Key from '../CanvasItems/Key.js';
-import CanvasRenderer from '../CanvasRenderer.js';
-import KeyListener from '../KeyListener.js';
-import Scene from '../Scene.js';
-import Stats from '../Stats.js';
-import KeyObtained from './KeyObtained.js';
-
+import Bubble from "../CanvasItems/Bubble.js";
+import FishnetPlayer from "../CanvasItems/FishnetPlayer.js";
+import GameItem from "../CanvasItems/GameItem.js";
+import Key from "../CanvasItems/Key.js";
+import CanvasRenderer from "../CanvasRenderer.js";
+import KeyListener from "../KeyListener.js";
+import Scene from "../Scene.js";
+import Stats from "../Stats.js";
+import KeyObtained from "./KeyObtained.js";
 
 export default class FishMinigame extends Scene {
   private keyAchieved: boolean = false;
 
   private fishnetPlayer: FishnetPlayer;
 
-
   public constructor(maxX: number, maxY: number, posX: number, posY: number) {
     super(maxX, maxY, posX, posY);
-    this.image.src = 'assets/backgrounds/AquariumBackground.png';
+    this.image.src = "assets/backgrounds/AquariumBackground.png";
     this.fishnetPlayer = new FishnetPlayer(maxX / 2, 0);
 
     this.gameItemMaker(maxX, maxY);
@@ -27,15 +25,15 @@ export default class FishMinigame extends Scene {
    * @param keyListener listens to keyboard input and calls functions
    */
   public override processInput(keyListener: KeyListener): void {
-    if (keyListener.isKeyDown('ArrowLeft') || keyListener.isKeyDown('KeyA')) {
+    if (keyListener.isKeyDown("ArrowLeft") || keyListener.isKeyDown("KeyA")) {
       this.fishnetPlayer.moveLeft();
     }
 
-    if (keyListener.isKeyDown('ArrowRight') || keyListener.isKeyDown('KeyD')) {
+    if (keyListener.isKeyDown("ArrowRight") || keyListener.isKeyDown("KeyD")) {
       this.fishnetPlayer.moveRight();
     }
 
-    if (keyListener.isKeyDown('ArrowDown') || keyListener.isKeyDown('KeyS')) {
+    if (keyListener.isKeyDown("ArrowDown") || keyListener.isKeyDown("KeyS")) {
       this.fishnetPlayer.moveDown();
     }
   }
@@ -44,7 +42,7 @@ export default class FishMinigame extends Scene {
    * @param maxX Screen Width
    * @param maxY Screen Height
    */
-  public gameItemMaker(maxX: number, maxY: number,): void {
+  public gameItemMaker(maxX: number, maxY: number): void {
     for (let i: number = 0; i < 12; i++) {
       const randomX: number = Math.random() * window.innerWidth;
 
@@ -62,31 +60,33 @@ export default class FishMinigame extends Scene {
    */
   public override update(elapsed: number): void {
     this.fishnetPlayer.upAndDownMovement(elapsed);
-    this.gameItem.forEach((item: GameItem) => (item.update(elapsed)));
+    this.gameItem.forEach((item: GameItem) => item.update(elapsed));
+    this.checkCollisions();
+    this.enforceCanvasBoundaries();
+  }
 
+  private checkCollisions(): void {
     this.gameItem.forEach((item: GameItem) => {
-      if (item instanceof Bubble) {
-        if (this.fishnetPlayer.isCollidingWithItem(item)) {
-          this.fishnetPlayer.bubbleColidesWithPlayer();
-        }
+      if (item instanceof Bubble && this.fishnetPlayer.isCollidingWithItem(item)) {
+        this.fishnetPlayer.bubbleColidesWithPlayer();
       }
-
-      if (item instanceof Key) {
-        if (this.fishnetPlayer.isCollidingWithItem(item)) {
-          Stats.setKeyCollected(1);
-          Stats.keyAquarium = true;
-          this.keyAchieved = true;
-        }
+      if (item instanceof Key && this.fishnetPlayer.isCollidingWithItem(item)) {
+        Stats.setKeyCollected(1);
+        Stats.keyAquarium = true;
+        this.keyAchieved = true;
       }
     });
+  }
 
+  private enforceCanvasBoundaries(): void {
     const playerWidth: number = this.fishnetPlayer.getWidth();
     const playerHeight: number = this.fishnetPlayer.getHeight();
+
     if (this.fishnetPlayer.posX >= window.innerWidth - playerWidth) {
       this.fishnetPlayer.posX = window.innerWidth - playerWidth;
     }
-    if (this.fishnetPlayer.posX < window.innerWidth - window.innerWidth) {
-      this.fishnetPlayer.posX = window.innerWidth - window.innerWidth;
+    if (this.fishnetPlayer.posX < 0) {
+      this.fishnetPlayer.posX = 0;
     }
     if (this.fishnetPlayer.posY > window.innerHeight - playerHeight) {
       this.fishnetPlayer.posY = window.innerHeight - playerHeight;
@@ -114,8 +114,7 @@ export default class FishMinigame extends Scene {
    * @param canvas the canvas
    */
   public override render(canvas: HTMLCanvasElement): void {
-    CanvasRenderer.drawImage(canvas, this.image, (this.maxX / 2 - (this.image.width / 2)),
-      (this.maxY / 2 - (this.image.height / 2)));
+    CanvasRenderer.drawImage(canvas, this.image, this.maxX / 2 - this.image.width / 2, this.maxY / 2 - this.image.height / 2);
     this.fishnetPlayer.render(canvas);
   }
 }
